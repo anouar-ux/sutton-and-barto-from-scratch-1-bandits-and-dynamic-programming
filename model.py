@@ -30,7 +30,7 @@ def pull_arm(true_values, action, rng):
         float: Stochastic reward for this pull.
     """
     
-    return true_values[action]+rng.normal(0,1)
+    return float(true_values[action]+rng.normal(0,1))
 
 # Step 3 - sample_average_update
 def sample_average_update(q_values, action_counts, action, reward):
@@ -80,7 +80,7 @@ def run_bandit_episode(true_values, n_steps, epsilon, rng):
         action=epsilon_greedy_action(q_table,epsilon,rng)
         action_list[k]=action
         reward=pull_arm(true_values,action,rng)
-        reward_list[k]=reward
+        reward_list[k]=int(reward)
         q_table,a_count=sample_average_update(q_table,a_count,action,reward)
 
     return (reward_list,action_list)
