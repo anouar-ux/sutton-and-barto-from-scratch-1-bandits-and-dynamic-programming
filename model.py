@@ -74,13 +74,13 @@ def run_bandit_episode(true_values, n_steps, epsilon, rng):
     q_table=np.zeros(n)
     a_count=np.zeros(n)
     reward_list=np.zeros(n_steps)
-    action_list=np.zeros(n_steps)
+    action_list=np.zeros(n_steps,dtype=int)
 
     for k in range(n_steps):
         action=epsilon_greedy_action(q_table,epsilon,rng)
         action_list[k]=action
         reward=pull_arm(true_values,action,rng)
-        reward_list[k]=int(reward)
+        reward_list[k]=reward
         q_table,a_count=sample_average_update(q_table,a_count,action,reward)
 
     return (reward_list,action_list)
