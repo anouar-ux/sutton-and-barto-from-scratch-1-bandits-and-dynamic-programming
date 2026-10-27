@@ -52,7 +52,7 @@ def epsilon_greedy_action(q_values, epsilon, rng):
     # TODO: Choose an action epsilon-greedily from the current value estimates.
     random=rng.random()
     if random<epsilon:
-        return rng.integers(0,q_values.shape)
+        return int(rng.integers(0, len(q_values)))
     else:
         return int(np.argmax(q_values))
 
@@ -70,7 +70,7 @@ def run_bandit_episode(true_values, n_steps, epsilon, rng):
         tuple: (rewards, actions) with shapes (n_steps,) and (n_steps,) of ints.
     """
     
-    n=true_values.shape[0]
+    n=len(true_values)
     q_table=np.zeros(n)
     a_count=np.zeros(n)
     reward_list=np.zeros(n_steps)
