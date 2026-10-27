@@ -52,12 +52,38 @@ def epsilon_greedy_action(q_values, epsilon, rng):
     # TODO: Choose an action epsilon-greedily from the current value estimates.
     random=rng.random()
     if random<epsilon:
-        return rng.integers(0,q_values.shape[0])
+        return rng.integers(0,q_values.shape)
     else:
         return np.argmax(q_values)
 
-# Step 5 - run_bandit_episode (not yet solved)
-# TODO: implement
+# Step 5 - run_bandit_episode
+def run_bandit_episode(true_values, n_steps, epsilon, rng):
+    """Run one bandit episode with epsilon-greedy selection and sample-average updates.
+
+    Args:
+        true_values (np.ndarray): Shape (k,) true mean reward of each arm.
+        n_steps (int): Number of pulls in the episode.
+        epsilon (float): Exploration probability for epsilon-greedy.
+        rng (np.random.Generator): Seeded random generator.
+
+    Returns:
+        tuple: (rewards, actions) with shapes (n_steps,) and (n_steps,) of ints.
+    """
+    
+    n=true_values.shape[0]
+    q_table=np.zeros(n)
+    a_count=np.zeros(n)
+    reward_list=[]
+    action_list=[]
+
+    for _ in range(n_steps):
+        action=epsilon_greedy_action(q_table,epsilon,rng)
+        action_list.append(action)
+        reward=pull_arm(true_values,action,rng)
+        reward_list.append(reward)
+        q_table=sample_average_update(q_table,a_count,action,reward)
+
+    return (np.array(reward_list),np.array(action_list))
 
 # Step 6 - track_rewards_and_optimal_actions (not yet solved)
 # TODO: implement
