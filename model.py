@@ -132,8 +132,15 @@ def apply_random_walk_drift(true_values, drift_std, rng):
 
     return true_values+noise
 
-# Step 9 - constant_step_size_update (not yet solved)
-# TODO: implement
+# Step 9 - constant_step_size_update
+def constant_step_size_update(q_values, action, reward, alpha):
+    
+
+    val=q_values[action]
+    val+= alpha*(reward-val)
+    q_values[action]=val
+
+    return q_values
 
 # Step 10 - optimistic_initialization (not yet solved)
 # TODO: implement
