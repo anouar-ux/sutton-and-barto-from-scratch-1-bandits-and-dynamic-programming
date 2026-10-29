@@ -142,8 +142,10 @@ def constant_step_size_update(q_values, action, reward, alpha):
 
     return q_values
 
-# Step 10 - optimistic_initialization (not yet solved)
-# TODO: implement
+# Step 10 - optimistic_initialization
+def optimistic_initialization(k, initial_value):
+    
+    return initial_value*np.ones(k)
 
 # Step 11 - ucb_action_select (not yet solved)
 # TODO: implement
