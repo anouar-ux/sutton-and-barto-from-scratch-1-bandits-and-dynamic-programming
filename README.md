@@ -1,8 +1,5 @@
 # Sutton and Barto from Scratch 1: Bandits and Dynamic Programming
 
-> **Work in progress: 6/21 steps done.** Done so far: k-armed testbed, sample-average estimates, an ε-greedy agent and per-step tracking of rewards and optimal actions. Learning-curve averaging, UCB, gradient bandits and the dynamic-programming part (policy and value iteration) are next.
-
-
 Implement core multi-armed bandit algorithms and dynamic-programming methods from Sutton and Barto. Build stationary and nonstationary bandit testbeds, compare epsilon-greedy, optimistic, UCB and gradient strategies, then solve gridworld and gambler MDPs with policy and value iteration.
 
 ## How to run
@@ -19,7 +16,7 @@ python scaffold.py
 - [x] **4.** epsilon_greedy_action
 - [x] **5.** run_bandit_episode
 - [x] **6.** track_rewards_and_optimal_actions
-- [ ] **7.** average_bandit_curves
+- [x] **7.** average_bandit_curves
 - [ ] **8.** apply_random_walk_drift
 - [ ] **9.** constant_step_size_update
 - [ ] **10.** optimistic_initialization
