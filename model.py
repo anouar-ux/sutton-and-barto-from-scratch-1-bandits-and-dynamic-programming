@@ -188,8 +188,184 @@ def gradient_bandit_update(preferences, action, reward, average_reward, alpha):
 
     return preferences
 
-# Step 13 - bandit_parameter_study (not yet solved)
-# TODO: implement
+# Step 13 - bandit_parameter_study
+import numpy as np
+
+def bandit_parameter_study(n_runs,n_steps,seed, settings,   k=10 ):
+    """
+    Run a multi-method bandit comparison over specified settings.
+    """
+    rng = np.random.default_rng(seed)
+    results = {}
+
+    for setting in settings:
+        method = setting['method']
+        param = setting['param']
+        nonstationary = setting.get('nonstationary', False)
+
+        label = f"{method}({param})"
+        if nonstationary:
+            label += ",ns"
+
+        final_step_rewards = np.zeros(n_runs)
+
+        # --- INITIALISATION DE L'ENVIRONNEMENT (Stationnaire) ---
+        # Créé une seule fois par setting
+        if not nonstationary:
+            base_true_values = create_bandit_testbed(k, seed=seed)
+
+        for run in range(n_runs):
+            # --- RESET DE L'ENVIRONNEMENT ---
+            if nonstationary:
+                true_values = np.zeros(k)
+            else:
+                # On utilise une copie pour s'assurer que le tableau de base 
+                # n'est jamais altéré par accident lors des manipulations
+                true_values = np.copy(base_true_values)
+
+            # 2. Initialize agent parameters
+            if method == 'optimistic':
+                q_values = optimistic_initialization(k, param)
+            else:
+                q_values = np.zeros(k)
+                
+            action_counts = np.zeros(k, dtype=int)
+            preferences = np.zeros(k)  # Used only for gradient method
+            average_reward = 0.0       # Baseline for gradient method
+
+            last_reward = 0.0
+
+            # 3. Run the episode
+            for t in range(1, n_steps + 1):
+                
+                # --- ACTION SELECTION ---
+                if method == 'epsilon_greedy':
+                    action = epsilon_greedy_action(q_values, param, rng)
+                elif method == 'constant_step':
+                    action = epsilon_greedy_action(q_values, 0.1, rng)
+                elif method == 'optimistic':
+                    action = epsilon_greedy_action(q_values, 0.0, rng)
+                elif method == 'ucb':
+                    action = ucb_action_select(q_values, action_counts, t, param)
+                elif method == 'gradient':
+                    exp_prefs = np.exp(preferences - np.max(preferences))
+                    probs = exp_prefs / np.sum(exp_prefs)
+                    action = rng.choice(k, p=probs)
+                else:
+                    raise ValueError(f"Unknown method: {method}")
+
+                # --- EXECUTE ACTION ---
+                reward = pull_arm(true_values, action, rng)
+                if t == n_steps:
+                    last_reward = reward
+
+                # --- AGENT UPDATE ---
+                action_counts[action] += 1
+                
+                if method in ['epsilon_greedy', 'ucb']:
+                    sample_average_update(q_values, action_counts, action, reward)
+                elif method == 'constant_step':
+                    constant_step_size_update(q_values, action, reward, param)
+                elif method == 'optimistic':
+                    constant_step_size_update(q_values, action, reward, 0.1)
+                elif method == 'gradient':
+                    average_reward += (reward - average_reward) / t
+                    gradient_bandit_update(preferences, action, reward, average_reward, param)
+
+                # --- ENVIRONMENT UPDATE (Nonstationary) ---
+                if nonstationary:
+                    apply_random_walk_drift(true_values, drift_std=0.01, rng=rng)
+                    
+            final_step_rewards[run] = last_reward
+            
+        results[label] = np.mean(final_step_rewards)
+        
+    return results
+    rng = np.random.default_rng(seed)
+    results = {}
+
+    for setting in settings:
+        method = setting['method']
+        param = setting['param']
+        nonstationary = setting.get('nonstationary', False)
+
+        # Generate setting label
+        label = f"{method}({param})"
+        if nonstationary:
+            label += ",ns"
+
+        final_step_rewards = np.zeros(n_runs)
+
+        for run in range(n_runs):
+            # 1. Initialize environment
+            if nonstationary:
+                true_values = np.zeros(k)
+            else:
+                run_seed = int(rng.integers(100000000))
+                true_values = create_bandit_testbed(k, seed=run_seed)
+
+            # 2. Initialize agent parameters
+            if method == 'optimistic':
+                q_values = optimistic_initialization(k, param)
+            else:
+                q_values = np.zeros(k)
+                
+            action_counts = np.zeros(k, dtype=int)
+            preferences = np.zeros(k)  # Used only for gradient method
+            average_reward = 0.0       # Baseline for gradient method
+
+            # Track reward at the final step
+            last_reward = 0.0
+
+            # 3. Run the episode
+            for t in range(1, n_steps + 1):
+                
+                # --- ACTION SELECTION ---
+                if method == 'epsilon_greedy':
+                    action = epsilon_greedy_action(q_values, param, rng)
+                elif method == 'constant_step':
+                    action = epsilon_greedy_action(q_values, 0.1, rng)
+                elif method == 'optimistic':
+                    action = epsilon_greedy_action(q_values, 0.0, rng)
+                elif method == 'ucb':
+                    action = ucb_action_select(q_values, action_counts, t, param)
+                elif method == 'gradient':
+                    # Softmax selection (with numerical stability shift)
+                    exp_prefs = np.exp(preferences - np.max(preferences))
+                    probs = exp_prefs / np.sum(exp_prefs)
+                    action = rng.choice(k, p=probs)
+                else:
+                    raise ValueError(f"Unknown method: {method}")
+
+                # --- EXECUTE ACTION ---
+                reward = pull_arm(true_values, action, rng)
+                if t == n_steps:
+                    last_reward = reward
+
+                # --- AGENT UPDATE ---
+                action_counts[action] += 1
+                
+                if method in ['epsilon_greedy', 'ucb']:
+                    sample_average_update(q_values, action_counts, action, reward)
+                elif method == 'constant_step':
+                    constant_step_size_update(q_values, action, reward, param)
+                elif method == 'optimistic':
+                    constant_step_size_update(q_values, action, reward, 0.1)
+                elif method == 'gradient':
+                    # Incremental average reward including current reward
+                    average_reward += (reward - average_reward) / t
+                    gradient_bandit_update(preferences, action, reward, average_reward, param)
+
+                # --- ENVIRONMENT UPDATE (Nonstationary) ---
+                if nonstationary:
+                    apply_random_walk_drift(true_values, drift_std=0.01, rng=rng)
+                    
+            final_step_rewards[run] = last_reward
+            
+        # Store mean of the final step reward across all runs
+        results[label] = np.mean(final_step_rewards)
+        
+    return results
 
 # Step 14 - build_gridworld_mdp (not yet solved)
 # TODO: implement
